@@ -30,13 +30,45 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/user', methods=['GET'])
-def handle_hello():
-
+@app.route('/todo', methods=['GET'])
+def get_all_todos():
+    todos = db.session.query(User).all()
+    new_list = []
+    for todo in todos:
+        print(todo.todo)
+        obj = {
+            "id":todo.id,
+            "todo":todo.todo,
+            "check":todo.check
+        }
+        new_list.append(obj)
     response_body = {
-        "msg": "Hello, this is your GET /user response "
+        'todos': new_list
+    }
+    return jsonify(response_body), 200
+
+@app.route('/create/todo', methods=['POST'])
+def create_todo():
+    id= request.json['id']
+    todo = request.json['todo']
+    check = request.json['check']
+    new_todo = User(id, todo, check)
+    db.session.add(new_todo)
+    db.session.commit()
+    response_body = {
+        "msg": "create, todo"
     }
 
+    return jsonify(response_body), 200
+
+@app.route('/delete/todo/<todo_id>', methods=['DELETE'])
+def delete_todo(todo_id):
+    todo = User.query.filter(User.id == todo_id).first()
+    db.session.delete(todo)
+    db.session.commit()
+    response_body = {
+        'msg': "todo delete"
+    }
     return jsonify(response_body), 200
 
 # this only runs if `$ python src/main.py` is executed
